@@ -125,6 +125,7 @@ int KEPCO_Motor::parsing(int argc, char *argv[])
 int KEPCO_Motor::MotorOpenPort(void)
 {
   // Open port
+  portHandler->closePort();
   if (portHandler->openPort())
   {
     printf("[0]Succeeded to open the port!\n\n");
@@ -467,13 +468,12 @@ int KEPCO_Motor::run(void  )
         fprintf(stderr, " Invalid parameters! \n");
       }
     }
-    else if (strcmp(cmd, "wrl") == 0)
+    else if (strcmp(cmd, "wrl") == 0 || strcmp(cmd, "wlr") == 0 )
     {
-      int* values_ = NULL;
       //parsing parameter
       if (num_param == 1) // Value 1
       {
-        int values[6] = {atoi(param[0]), };
+        int values[6] = {atoi(param[0]),atoi(param[0]),atoi(param[0]),atoi(param[0]),atoi(param[0]),atoi(param[0])};
         // write
         if (Group_Write(values,1,6) == 0) // success 0 / fail -1
           printf("\n Success to send to right and left motors ! \n\n");
@@ -494,11 +494,10 @@ int KEPCO_Motor::run(void  )
     }
     else if (strcmp(cmd, "wr") == 0)
     {
-      int* values_ = NULL;
       //parsing parameter
       if (num_param == 1) // Value 1
       {
-        int values[3] = {atoi(param[0]), };
+        int values[3] = {atoi(param[0]),atoi(param[0]),atoi(param[0])};
         // write     
         if (Group_Write(values,1,3) == 0) // success 0 / fail -1
           printf("\n Success to send to right motors ! \n\n");
@@ -523,7 +522,7 @@ int KEPCO_Motor::run(void  )
       //parsing parameter
       if (num_param == 1) // Value 1
       {
-        int values[3] = {atoi(param[0]), };
+        int values[3] = {atoi(param[0]),atoi(param[0]),atoi(param[0])};
         // write
         if (Group_Write(values,4,6) == 0) // success 0 / fail -1
           printf("\n Success to send to left motors ! \n\n");
@@ -592,16 +591,16 @@ int KEPCO_Motor::show(void)
 
 int KEPCO_Motor::Group_Write(int* values, int from_motor, int to_motor)
 {
-  bool dxl_result;
-  
+  int dxl_result;
+  int i=0; 
   if(values == NULL) return -1;
 
   // groupSyncWriter instance 생성 
-  dynamixel::GroupSyncWrite groupPosWrite(portHandler, packetHandler, ADDR_GOAL_POSITION, LEN_GOAL_POSITION);
+  static dynamixel::GroupSyncWrite groupPosWrite(portHandler, packetHandler, ADDR_GOAL_POSITION, LEN_GOAL_POSITION);
 
-  for(int id = from_motor ; id <= to_motor ; id++)
+  for(int id = from_motor ; id <= to_motor ; id++,i++)
   {
-    dxl_result = groupPosWrite.addParam(id, (uint8_t*)&values[id-1]);
+    dxl_result = groupPosWrite.addParam(id, (uint8_t*)&values[i]);
 
     #ifdef DEBUG
     printf("num : %d : value : %d \t", id, values[id-1]);
@@ -620,13 +619,15 @@ int KEPCO_Motor::Group_Write(int* values, int from_motor, int to_motor)
 
   // Syncwrite 수행
   dxl_result = groupPosWrite.txPacket();
-  if(dxl_result != COMM_SUCCESS) 
-    printf("%s\n", packetHandler->getTxRxResult((int)dxl_result));
+  if(dxl_result != COMM_SUCCESS)
+  { 
+    printf("Write Error : %s\n", packetHandler->getTxRxResult(dxl_result));
+    groupPosWrite.clearParam();
+    return -1;
+  }
   else
     printf("All Motors Values are Seted !!\n");
-
-  sleep(1); 
-
+  
   // Clear syncwrite parameter storage
   groupPosWrite.clearParam();
   return 0;
