@@ -49,6 +49,8 @@ LIBRARIES  += -lrt
 # Files
 #---------------------------------------------------------------------
 SOURCES = motor.cpp \
+	  kepco_motor.cpp \
+	  motor_io.cpp
     # *** OTHER SOURCES GO HERE ***
 
 OBJECTS  = $(addsuffix .o,$(addprefix $(DIR_OBJS)/,$(basename $(notdir $(SOURCES)))))

@@ -3,7 +3,7 @@
 /***********************************************************
 * @PROJECT : KEPCO Motor Monitor tool
 * @AUTHOR  : Uk Cheol Shin, KAIST RCV LAB
-* @DATE    : 2018-04-16
+* @DATE    : 2018-05-08
 ***********************************************************/
 
 # 1. Dynamixel Library installation
